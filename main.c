@@ -63,6 +63,7 @@ int main(int argc, char *argv[]){
             break;
         case 'h':
             printf("Stilll working on it.\n");
+            return EXIT_SUCCESS;
             break;
         case 'd': // seqid
             if (!setSeqID(optarg, &printer)) {
