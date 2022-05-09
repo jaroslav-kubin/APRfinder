@@ -1,7 +1,7 @@
-# Bachelors thesis
+# APRfinder
 
-Program searching for a-phased repeats. 
+Program searching for a-phased repeats. The APR stands for a-phased repeats.
 
-# Introduction
+# Installation
 
-This software is still in progress, so there is nothin much to say :)
+APRfinder can be easily installed within conda enviroment.
