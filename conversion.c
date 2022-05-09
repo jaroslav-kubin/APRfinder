@@ -1,13 +1,6 @@
 #include "conversion.h"
 /* Those function are just for visualization. */
-void red () {
-  printf("\033[1;31m");
-}
 
-
-void reset () {
-  printf("\033[0m");
-}
 
 
 char getNucleotide(uint8_t value) {
@@ -148,7 +141,7 @@ bounds satisfiesBoundaries(int x, int upper, int lower){
 
 bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
     int current = ftell(f);    
-    int offset = printer.seek_start +repeats.from-1;
+    int offset = printer.seek_start +repeats.from;
     int checker = fseek(f, offset, SEEK_SET);
     if (checker) {
         return false;
@@ -158,7 +151,7 @@ bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
     char res[length+1];
     
     if ((fgets(res, sizeof(res), f)) == NULL) {
-        printf("Something is horribly wrong\n");
+        printf("Something is horribly wrong. Report this bug please.\n");
         return false;
     }
     for (size_t i = 0; i < length;i++) {
@@ -297,8 +290,43 @@ bool raiseValue(uint8_t *value, char c, int counter) {
     return c == 'c' || c == 'g' || c == 'n';
     
 }
+void inicializeSearch(aTrack *prev, repeats *rep, bool *at_overflow, uint8_t *code) {
+    prev->from = 0;
+    prev->to = 0;
+    rep->from = 0;
+    rep->to = 0;
+    rep->mid_to_beat= 0;
+    rep->track_count = 0;
+    *at_overflow = false;
+    *code = 0;
+}
 
-bool getMemory(FILE* f, FILE* result, printer printer, parameters parametr) {
+
+void inicializeHeader(char *header, printer *p, int *count, int *position, seq *s, FILE *f) {
+    fscanf(f, "%s%*[^\n]s", header);
+    p->seek_start = ftell(f);
+    fscanf(f, "%*c");
+    p->id = header;
+    *count = 0;
+    *position = 0;
+    s->length = 0;
+    s->total_size = 0;
+}
+
+void unfinishedBussiness(int count, seq *s, int position, uint8_t code, printer p, FILE *result, FILE *f, aTrack *prev, parameters param, repeats rep, bool at_overflow, uint32_t mask) {
+    if (count % 8) {
+        s->values[position] = code;
+    }
+    s->length = count;
+    s->total_size += count;
+    linearSearch(s, result, p, f, prev, param, &rep, &at_overflow, mask);
+    if (rep.track_count >= param.min_tracks && rep.track_count <= param.min_tracks) {
+        writeResult(f, result, p, rep);
+    }
+}
+
+
+bool getMemory(FILE* f, FILE* result, printer *printer, parameters parametr) {
     int count = 0;
     seq seq = {0, 0, 0};
     if ((seq.values = malloc(parametr.memory_size)) == NULL) {
@@ -311,16 +339,33 @@ bool getMemory(FILE* f, FILE* result, printer printer, parameters parametr) {
     repeats rep = {0, 0, 0, 0}; 
     uint32_t mask = createMask(parametr.min_AT);
     bool at_overflow = false;
+    char *header;
+    if (!(header = malloc(20*sizeof(char)))) {
+        return false;
+    }
     while ((c = getc(f)) != EOF){    
+        
         if (c == '\n') { 
-            continue; 
+            (printer->seek_start)++;
+            continue;
         }
+
+        if (c == '>') {
+            if (count) {
+                unfinishedBussiness(count, &seq, position, code, *printer, result, f, &prev, parametr, rep, at_overflow, mask);
+                inicializeSearch(&prev, &rep, &at_overflow, &code);
+                
+            }
+            inicializeHeader(header, printer, &count, &position, &seq, f);
+            continue;
+        }
+        
         c = tolower(c);
+        
         if (count == parametr.memory_size) { 
             seq.length = count;
             seq.total_size += count;
-            linearSearch(&seq, result, printer, f, &prev, parametr, &rep, &at_overflow, mask);
-            //printf("rep %d %d %d\n", rep.from, rep.to, rep.track_count);
+            linearSearch(&seq, result, *printer, f, &prev, parametr, &rep, &at_overflow, mask);
             position = 0;
             count = 0;
         }
@@ -336,15 +381,7 @@ bool getMemory(FILE* f, FILE* result, printer printer, parameters parametr) {
         }
         
     }
-    if (count % 8) {
-        seq.values[position] = code;
-    }
-    seq.length = count;
-    seq.total_size += count;
-    linearSearch(&seq, result, printer, f, &prev, parametr, &rep, &at_overflow, mask);
-    if (rep.track_count >= parametr.min_tracks && rep.track_count <= parametr.min_tracks) {
-        writeResult(f, result, printer, rep);
-    }
+    unfinishedBussiness(count, &seq, position, code, *printer, result, f, &prev, parametr, rep, at_overflow, mask);
     free(seq.values);
     return true;
 }   

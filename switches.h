@@ -8,7 +8,22 @@
 #include <string.h>
 #include <stdbool.h>
 
+typedef enum switches {
+    input,
+    output,
+    upper_bound, 
+    lower_bound,
+    exact_bound,
+    help,
+    max_AT,
+    min_AT,
+    exact_AT,
+    max_tracks,
+    min_tracks,
+    exact_tracks,
+    memory_size
 
+} switches;
 
 typedef struct parameters {
     char* input;
@@ -52,4 +67,9 @@ int setSource(char *arg, printer *printer);
 void printParameters(parameters param);
 void printPrinter(printer printer);
 void initializeImplicit(parameters *param);
-void initializePrinter(printer *p, int stream_start, char* header);
+void initializePrinter(printer *p);
+int setExactTracks(char *arg, parameters *param);
+int setExactAT(char *arg, parameters *param);
+int setExactBound(char *arg, parameters *param);
+void printUsage();
+void printHelp();

@@ -64,7 +64,8 @@ uint32_t createMask(int min_at);
 bounds satisfiesBoundaries(int x, int upper, int lower);
 bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats);
 bool getHeader(char * header, char *fname);
-
+void red();
+void reset();
 
 
 /**
@@ -112,7 +113,7 @@ bool converter(FILE* f, seq *seq, int *count);
  * @param f - file in format of fasta
  * @return binary coded sequence of nucleotide 
  */
-bool getMemory(FILE* f, FILE *result, printer printer, parameters parametr);
+bool getMemory(FILE* f, FILE *result, printer *printer, parameters parametr);
 
 
 /**

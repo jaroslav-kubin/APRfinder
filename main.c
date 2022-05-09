@@ -5,21 +5,29 @@
 #include <time.h>
 #define fileOpeningFailure "Cant open the file %s.Check if your file after -i/--input <file> exists and can be accessed,\n"
 
+void red () {
+  printf("\033[1;31m");
+}
+
+
+void reset () {
+  printf("\033[0m");
+}
 
 static struct option long_options[] = {
-    { "input", required_argument, NULL, 'i' },
-    { "output", required_argument, NULL, 'o'},
-    { "upper", required_argument, NULL, 'u'},
-    { "lower", required_argument, NULL, 'l'},
-    { "help", no_argument, NULL, 'h'},
-    { "seq-id", required_argument, NULL, 'd'},
-    { "source", required_argument, NULL, 's'},
-    { "max-AT", required_argument, NULL, 'm'},
-    { "min-AT", required_argument, NULL, 'n'},
-    { "max-tracks", required_argument, NULL, 'q'},
-    { "min-tracks", required_argument, NULL, 'p'},
-    { "memory-size", required_argument, NULL, 'y'},
-
+    { "input", required_argument, NULL, input },
+    { "output", required_argument, NULL, output},
+    { "upper-bound", required_argument, NULL, upper_bound},
+    { "lower-bound", required_argument, NULL, lower_bound},
+    { "exact-bound", required_argument, NULL, exact_bound},
+    { "help", no_argument, NULL, help},
+    { "max-AT", required_argument, NULL, max_AT},
+    { "min-AT", required_argument, NULL, min_AT},
+    { "exact-AT", required_argument, NULL, exact_AT},
+    { "max-tracks", required_argument, NULL, max_tracks},
+    { "min-tracks", required_argument, NULL, min_tracks},
+    { "exact-tracks", required_argument, NULL, exact_tracks},
+    { "memory-size", required_argument, NULL, memory_size},
     { 0, 0, 0, 0 }
 };
 
@@ -35,78 +43,79 @@ int main(int argc, char *argv[]){
     
     printer printer = {};
     if (c == EOF) {
-        printf("APRfinder - tool for a-phased repeat search.\nFor options description run APRfinder --help\n");
-        printf("Usage:\n");
-        
-        printf("APRfinder [--help] [--input=<string>] [--output=<string>] [--upper=<int>] [--lower=<int>]\n");
-        printf("          [--seq-id=<string>] [--source <string>] [--max-AT=<int>] [--min-AT=<int>] [--max-tracks=<int>]\n");
-        printf("          [--min-tracks=<int>] [--memory-size=<int>]\n");
+        printUsage();
         return EXIT_SUCCESS;
     } 
     while (c != EOF) {
         switch (c) {
-        case 'i':
+        case help:
+            printHelp();
+            return EXIT_SUCCESS;
+            break;
+        case input:
             if (!setInput(optarg, &param)) {
                 return EXIT_FAILURE;
             }       
             break;
-        case 'o':
+        case output:
             if (!setOutput(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'l':
+        case lower_bound:
             if (!setLower(optarg, &param)) {
                 return EXIT_FAILURE;
             }
 
             break;
-        case 'u':
+        case upper_bound:
             if (!setUpper(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'h':
-            printf("Stilll working on it.\n");
-            return EXIT_SUCCESS;
-            break;
-        case 'd': // seqid
-            if (!setSeqID(optarg, &printer)) {
-                return EXIT_FAILURE;
-            }
-            break;
-        case 's':
-            if (!setSource(optarg, &printer)) {
-                return EXIT_FAILURE;
-            }
-            break;
-        case 'n':
+        
+        case min_AT:
             if (!setMinAT(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'm':
+        case max_AT:
             if (!setMaxAT(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'q':
+        case max_tracks:
             if (!setMaxTracks(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'p':
+        case min_tracks:
             if (!setMinTracks(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
-        case 'y':
+        case memory_size:
             if (!setMemorySize(optarg, &param)) {
                 return EXIT_FAILURE;
             }
             break;
+        case exact_tracks:
+            if (!setExactTracks(optarg, &param)) {
+                return EXIT_FAILURE;
+            }
+            break;
+        case exact_AT:
+            if (!setExactAT(optarg, &param)) {
+                return EXIT_FAILURE;
+            }
+            break;
+        case exact_bound:
+            if (!setExactBound(optarg, &param)) {
+                return EXIT_FAILURE;
+            }
+            break;
         default:
-            printf("Unknown argument or bad usage. Use -h/--help to print usage\n");
+            printf("Unknown argument or bad usage. Run APRfinder --help to print out switches options.\n");
             return 1;
         }
         c = getopt_long(argc, argv,"", long_options, &index);
@@ -125,25 +134,16 @@ int main(int argc, char *argv[]){
 
 
     
-    char header[20];
-    fscanf(file, "%*c%s%*[^\n]s", header);
-    long int stream_start = ftell(file)+1;
+    
     seq seq;
-    int l;
-    char *fname;
     //Output file opening
     if (!param.output) {
-        l = strlen(header) + strlen("_result.gff")+1;
-        if (!(fname = malloc(l*sizeof(char)))) {
-            fprintf(stderr, "Allocation has failed\n");
-            return 1;
-        }
-        getHeader(header, fname);
+        char *fname = "result.gff";
         param.output = fname;
     }
     
 
-    initializePrinter(&printer, stream_start, header);
+    initializePrinter(&printer);
     initializeImplicit(&param);
     if (param.upper > 20) {
         fprintf(stderr, "The upper bound for spacer length is little too big, maximum is 19.\n");
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
     if (!(result = fopen(param.output, "w"))) {
         free(seq.values);
         fclose(file);
-        fprintf(stderr, fileOpeningFailure, fname);
+        fprintf(stderr, fileOpeningFailure, param.output);
         return -1;
     }
     
@@ -174,15 +174,18 @@ int main(int argc, char *argv[]){
 
     // fPTR files = { .input = file, .output = result };
 
-    
-    if (!(getMemory(file, result, printer, param))) {
+    printf("The program is currently searching for a-phased repeats. It can take a while. Abort with CTRL+C.\n");
+    if (!(getMemory(file, result, &printer, param))) {
         fprintf(stderr, "Cannot convert this format.\n");
         return -1;
     }
     fclose(file);
     fclose(result);
     clock_t end = clock();
-    printf("Time : %lf s\n", (double) (end - start) / CLOCKS_PER_SEC);
+    red();
+    printf("CPU Time : %lf s\n", (double) (end - start) / CLOCKS_PER_SEC);
+    reset();
+    printf("Program ended successfully. The result of the search is found in %s\n", param.output);
     return 0;
     
 }
