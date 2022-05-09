@@ -31,34 +31,39 @@ int main(int argc, char *argv[]){
     clock_t start = clock();
     int index = 0;
     parameters param = {};
-    char c = getopt_long(argc, argv,"i:o:l:u:hs:d:m:n:q:p:y:", long_options, &index);
+    char c = getopt_long(argc, argv,"", long_options, &index);
     
     printer printer = {};
     if (c == EOF) {
-        fprintf(stderr, "No input file. The program need atleast -i/--input <name> to run or see help using -h/--help.\n");
-        return 1;
+        printf("APRfinder - tool for a-phased repeat search.\nFor options description run APRfinder --help\n");
+        printf("Usage:\n");
+        
+        printf("APRfinder [--help] [--input=<string>] [--output=<string>] [--upper=<int>] [--lower=<int>]\n");
+        printf("          [--seq-id=<string>] [--source <string>] [--max-AT=<int>] [--min-AT=<int>] [--max-tracks=<int>]\n");
+        printf("          [--min-tracks=<int>] [--memory-size=<int>]\n");
+        return EXIT_SUCCESS;
     } 
     while (c != EOF) {
         switch (c) {
         case 'i':
             if (!setInput(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }       
             break;
         case 'o':
             if (!setOutput(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'l':
             if (!setLower(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
 
             break;
         case 'u':
             if (!setUpper(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'h':
@@ -67,44 +72,44 @@ int main(int argc, char *argv[]){
             break;
         case 'd': // seqid
             if (!setSeqID(optarg, &printer)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 's':
             if (!setSource(optarg, &printer)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'n':
             if (!setMinAT(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'm':
             if (!setMaxAT(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'q':
             if (!setMaxTracks(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'p':
             if (!setMinTracks(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         case 'y':
             if (!setMemorySize(optarg, &param)) {
-                return 1;
+                return EXIT_FAILURE;
             }
             break;
         default:
             printf("Unknown argument or bad usage. Use -h/--help to print usage\n");
             return 1;
         }
-        c = getopt_long(argc, argv,"i:o:l:u:hs:d:", long_options, &index);
+        c = getopt_long(argc, argv,"", long_options, &index);
     }
     
     if (!param.input) {

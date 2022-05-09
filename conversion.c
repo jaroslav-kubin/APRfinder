@@ -221,7 +221,6 @@ bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev
     
     //OK
     while (position < seq->length) {
-        
         if (*at_overflow) {
             while ((at_mask & window) == at_mask) {
                 moveInWindow(&window, &position, &count, 1);
@@ -313,7 +312,9 @@ bool getMemory(FILE* f, FILE* result, printer printer, parameters parametr) {
     uint32_t mask = createMask(parametr.min_AT);
     bool at_overflow = false;
     while ((c = getc(f)) != EOF){    
-        if (c == '\n') { continue; }
+        if (c == '\n') { 
+            continue; 
+        }
         c = tolower(c);
         if (count == parametr.memory_size) { 
             seq.length = count;
