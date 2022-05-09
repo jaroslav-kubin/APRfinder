@@ -5,14 +5,7 @@
 #include <time.h>
 #define fileOpeningFailure "Cant open the file %s.Check if your file after -i/--input <file> exists and can be accessed,\n"
 
-void red () {
-  printf("\033[1;31m");
-}
 
-
-void reset () {
-  printf("\033[0m");
-}
 
 static struct option long_options[] = {
     { "input", required_argument, NULL, input },

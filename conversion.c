@@ -2,6 +2,14 @@
 /* Those function are just for visualization. */
 
 
+void red () {
+  printf("\033[1;31m");
+}
+
+
+void reset () {
+  printf("\033[0m");
+}
 
 char getNucleotide(uint8_t value) {
     return value == 1 ? 'y': 'n';
