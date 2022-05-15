@@ -263,7 +263,7 @@ void freePrinter(printer *printer) {
 
 void initializeImplicit(parameters *param) {
     if (!param->lower) {
-        param->lower = 7; 
+        param->lower = 10; 
     }
     if (!param->upper) {
         param->upper = 12;
@@ -272,7 +272,7 @@ void initializeImplicit(parameters *param) {
         param->min_AT = 3;
     }
     if (!param->max_AT) {
-        param->max_AT = 8;
+        param->max_AT = 9;
     }
     if (!param->min_tracks) {
         param->min_tracks = 3;
