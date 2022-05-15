@@ -226,9 +226,9 @@ void printPrinter(printer printer) {
 }
 
 void printUsage() {
-    printf("APRfinder - tool for a-phased repeat search.\n");
+    printf("aprfinder - tool for a-phased repeat search.\n");
     printf("Usage:\n");
-    printf("APRfinder [--help] [--input=<string>] [--output=<string>] [--upper-bound=<int>] [--lower-bound=<int>]\n");
+    printf("aprfinder [--help] [--input=<string>] [--output=<string>] [--upper-bound=<int>] [--lower-bound=<int>]\n");
     printf("          [--max-AT=<int>] [--min-AT=<int>] [--max-tracks=<int>] [--min-tracks=<int>] [--memory-size=<int>]\n");
     printf("          [--exact-bound=<int>] [--exact-tracks=<int>] [--exact-AT=<int>]\n");
 }

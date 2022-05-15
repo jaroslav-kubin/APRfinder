@@ -263,7 +263,7 @@ bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev
                 }
             } else if (b == OUTSIDE) {
                 if (rep->track_count >= parameter.min_tracks) {
-                    writeResult(f, result, printer, *rep);
+                    writeResult(f, result, printer, *rep); 
                     initialRepeats(rep, 0, 0);
                 } else {
                     initialRepeats(rep, mid_now, now.from);
