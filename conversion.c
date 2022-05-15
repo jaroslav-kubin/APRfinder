@@ -41,7 +41,7 @@ void printValues(struct seq seq, FILE *f) {
 /* ========================================== */
 /* ================= SEARCHING ALGORITHMS =========================== */
 
-int calculateMid(aTrack track) { 
+uint32_t calculateMid(aTrack track) { 
     return (track.from + track.to)/2; 
 }
 
@@ -67,7 +67,6 @@ uint32_t createMask(int min_at) {
     return mask;
     
 }
-
 
 uint32_t initializeWindow(seq seq, int position) {
     int i = 0;
@@ -97,21 +96,13 @@ uint32_t calculateStartingPoint(int total_size) {
     return total_size - 1000;
 }
 
-
-
-
-
 bool findTrack(uint32_t *window, seq *seq, int *count, int *position, aTrack *track, parameters param) {
-    
     uint32_t mask = 0x80000000;
-    //printf("********************************\n");
     int from = *position;
-    //printf("from is %d\n", from);
-    //printf("Position in findAtrack is %d\n", *position);
     *position += param.min_AT;
     *window <<= param.min_AT;
     *count += param.min_AT;
-    int starting_point = calculateStartingPoint(seq->total_size);
+    uint32_t starting_point = calculateStartingPoint(seq->total_size);
     while ((*window & mask) == mask) {
         if (*position >= seq->length) {
             red();
@@ -130,14 +121,11 @@ bool findTrack(uint32_t *window, seq *seq, int *count, int *position, aTrack *tr
     }
     track->from = starting_point + from+1;
     track->to = starting_point + *position;
-    //printf("starting point is %d, (%d, %d)\n", starting_point, track.from, track.to);
-    //printf("********************************\n");
-
     return false;
 }
 
 
-bounds satisfiesBoundaries(int x, int upper, int lower){
+bounds satisfiesBoundaries(uint32_t x, uint32_t upper, uint32_t lower){
     if (x < lower) {
         return WITHIN;
     } else if (x > upper) {
@@ -148,8 +136,8 @@ bounds satisfiesBoundaries(int x, int upper, int lower){
 
 
 bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
-    int current = ftell(f);    
-    int offset = printer.seek_start +repeats.from;
+    long current = ftell(f);    
+    long offset = printer.seek_start +repeats.from;
     int checker = fseek(f, offset, SEEK_SET);
     if (checker) {
         return false;
@@ -159,8 +147,8 @@ bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
     char res[length+1];
     
     if ((fgets(res, sizeof(res), f)) == NULL) {
-        printf("Something is horribly wrong. Report this bug please.\n");
-        return false;
+        printf("Cant obtain the string from the file. Please report this issue to https://github.com/jaroslav-kubin/aprfinder.\n");
+        return true;
     }
     for (size_t i = 0; i < length;i++) {
         res[i] = tolower(res[i]);
@@ -172,7 +160,7 @@ bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
             
         
     }
-    fprintf(result, "%s\t%s\t%s\t%d\t%d\t%c\t%c\t%c\ttracks=%d;seq=%s\n",  printer.id,
+    fprintf(result, "%s\t%s\t%s\t%u\t%u\t%c\t%c\t%c\ttracks=%d;seq=%s\n",  printer.id,
                                                     printer.source,
                                                     printer.type,
                                                     repeats.from,
@@ -183,7 +171,6 @@ bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
                                                     repeats.track_count,
                                                     res);                                     
     if (fseek(f, current, SEEK_SET)) {
-        printf("Some error message\n");
         return true;
     }
     return false;
@@ -191,12 +178,11 @@ bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats) {
 
 }
 
-bool initialRepeats(repeats *rep, int mid_now, int from) {
+void inicializeRepeats(repeats *rep, int mid_now, int from) {
     rep->mid_to_beat = mid_now;
     rep->from = from;
     rep->to = 0;
     rep->track_count = 0;
-    return true;
 }
 
 
@@ -207,16 +193,14 @@ void moveInWindow(uint32_t *window, int *position, int *count, int step) {
     *count += step;
 }
 
-bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev, parameters parameter, repeats *rep, bool *at_overflow,uint32_t mask ) {
+bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, parameters parameter, repeats *rep, bool *at_overflow,uint32_t mask ) {
     uint8_t *array = seq->values;
     uint32_t length = (seq->length % 8 == 0) ? seq->length/8 : (seq->length/8)+1;
     int position = 0;
     uint32_t window = initializeWindow(*seq, position);
     int count = 0;
-    
     aTrack now = {0, 0};
     uint32_t at_mask = 0x80000000;
-    bounds b = false;
     uint32_t current = 4;
     uint32_t number;
     
@@ -241,8 +225,8 @@ bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev
             if ((*at_overflow = findTrack(&window, seq, &count, &position, &now, parameter))) {
                 continue;
             }
-            int mid_now = calculateMid(now);
-            int spacer = mid_now - rep->mid_to_beat;
+            uint32_t mid_now = calculateMid(now);
+            uint32_t spacer = mid_now - rep->mid_to_beat;
             
             if (!rep->track_count) {
                 rep->from = now.from;
@@ -258,41 +242,44 @@ bool linearSearch(seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev
                 rep->track_count++;
                 rep->to = now.to;
                 if (rep->track_count >= parameter.max_tracks) {
-                    writeResult(f, result, printer, *rep);
-                    initialRepeats(rep, 0, 0);
+                    if (writeResult(f, result, printer, *rep)) {
+                        red();
+                        printf("The offset value has overflown -- the last column may be corrupted.\n\
+                                Please split the input file and rerun for each splitted file to avoid corruption\n");
+                        reset();
+                        return false;   
+                    }
+                    inicializeRepeats(rep, 0, 0);
                 }
             } else if (b == OUTSIDE) {
                 if (rep->track_count >= parameter.min_tracks) {
-                    writeResult(f, result, printer, *rep); 
-                    initialRepeats(rep, 0, 0);
+                    if (writeResult(f, result, printer, *rep)) {
+                        red();
+                        printf("The offset value has overflown -- the last column may be corrupted.\n\
+                                Please split the input file and rerun for each splitted file to avoid corruption\n");
+                        reset();
+                        return false;
+                    }
+                    inicializeRepeats(rep, 0, 0);
                 } else {
-                    initialRepeats(rep, mid_now, now.from);
+                    inicializeRepeats(rep, mid_now, now.from);
                 }
             }                
         } else {
             moveInWindow(&window, &position, &count, 1);
         }
     }
-    if (b) {
-        
-    }
     return true;
 }
-bool getHeader(char * header, char *fname) {
-    strcpy(fname, header);
-    strcat(fname, "_result.gff");
-    return true;
-}
+
 /* ============================================================ */
 
 /* =============== DECOMPOSITION OF FUNCTIONS ================= */
 
 bool raiseValue(uint8_t *value, char c, int counter) {
     if (c == 'a' || c == 't') {
-        //printf("Value before: %d\n", *value);
         uint8_t shift = counter != 0?  1 << (8-counter): 1;
         *value += shift;
-        //printf("I shifted and now have value %d\n", *value);
         return true;
     } 
     return c == 'c' || c == 'g' || c == 'n';
@@ -321,16 +308,25 @@ void inicializeHeader(char *header, printer *p, int *count, int *position, seq *
     s->total_size = 0;
 }
 
-void unfinishedBussiness(int count, seq *s, int position, uint8_t code, printer p, FILE *result, FILE *f, aTrack *prev, parameters param, repeats rep, bool at_overflow, uint32_t mask) {
+bool unfinishedBussiness(int count, seq *s, int position, uint8_t code, printer p, FILE *result, FILE *f, parameters param, repeats rep, bool at_overflow, uint32_t mask) {
     if (count % 8) {
         s->values[position] = code;
     }
     s->length = count;
     s->total_size += count;
-    linearSearch(s, result, p, f, prev, param, &rep, &at_overflow, mask);
-    if (rep.track_count >= param.min_tracks && rep.track_count <= param.min_tracks) {
-        writeResult(f, result, p, rep);
+    if (!linearSearch(s, result, p, f, param, &rep, &at_overflow, mask)) {
+        return false;
     }
+    if (rep.track_count >= param.min_tracks && rep.track_count <= param.min_tracks) {
+        if (writeResult(f, result, p, rep)) {
+            red();
+            printf("The offset value has overflown -- the last column may be corrupted.\
+                    Please split the input file and rerun for each splitted file to avoid corruption\n");
+            reset();
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -360,7 +356,9 @@ bool getMemory(FILE* f, FILE* result, printer *printer, parameters parametr) {
 
         if (c == '>') {
             if (count) {
-                unfinishedBussiness(count, &seq, position, code, *printer, result, f, &prev, parametr, rep, at_overflow, mask);
+                if (!unfinishedBussiness(count, &seq, position, code, *printer, result, f, parametr, rep, at_overflow, mask)) {
+                    return false;
+                }
                 inicializeSearch(&prev, &rep, &at_overflow, &code);
                 
             }
@@ -373,7 +371,9 @@ bool getMemory(FILE* f, FILE* result, printer *printer, parameters parametr) {
         if (count == parametr.memory_size) { 
             seq.length = count;
             seq.total_size += count;
-            linearSearch(&seq, result, *printer, f, &prev, parametr, &rep, &at_overflow, mask);
+            if (!linearSearch(&seq, result, *printer, f, parametr, &rep, &at_overflow, mask)) {
+                return false;
+            }
             position = 0;
             count = 0;
         }
@@ -389,7 +389,9 @@ bool getMemory(FILE* f, FILE* result, printer *printer, parameters parametr) {
         }
         
     }
-    unfinishedBussiness(count, &seq, position, code, *printer, result, f, &prev, parametr, rep, at_overflow, mask);
+    if (!unfinishedBussiness(count, &seq, position, code, *printer, result, f, parametr, rep, at_overflow, mask)) {
+        return false;
+    }
     free(seq.values);
     return true;
 }   
@@ -405,11 +407,3 @@ void * allocationFailed(uint8_t * pointer) {
 
 
 /* ========================== END ================================ */
-/* =============== MAIN FUNCTIONS, DATA STRUCTURES =============== */
-
-
-
-
-
-
-/* ============================ END =============================== */

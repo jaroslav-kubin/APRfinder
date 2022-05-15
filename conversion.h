@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -7,6 +6,7 @@
 
 
 /* =============== MAIN FUNCTIONS, DATA STRUCTURES =============== */
+
 
 /**
  * @brief Data structure for holding all information needed.
@@ -20,11 +20,6 @@ typedef struct seq {
     int total_size;
 } seq;
 
-typedef struct filePTR {
-    FILE *input;
-    FILE *output;
-} fPTR;
-
 
 /**
  * @brief Holds information about the founded aTrack.
@@ -35,11 +30,15 @@ typedef struct aTrack {
 } aTrack;
 
 
+/**
+ * @brief Hold informatioin about possible A-phased repeat.
+ * 
+ */
 typedef struct repeats {
-    int from;
-    int to;
+    uint32_t from;
+    uint32_t to;
     int track_count;
-    int mid_to_beat;
+    uint32_t mid_to_beat;
 } repeats;
 
 
@@ -51,20 +50,97 @@ typedef enum nucleotide {
     y
 } nuc;
 
+
+/**
+ * @brief Represent if the spacer is: 
+ *  - lower then lower bound (WITHIN)
+ *  - between the lower and upper boundary (INSIDE) 
+ *  - greater the upper bound (OUTSIDE)  
+ */
 typedef enum bounds {
     INSIDE = 1,
     OUTSIDE = -1,
     WITHIN = 0
 } bounds;
 
+
+/**
+ * @brief Find A-track. Note that if there is more A/T nucleotides then allowed value, the track is not considered.
+ * 
+ * @param window - searched window
+ * @param seq - sequence for searching
+ * @param count - count of nucleotides within the window
+ * @param position - current position in array
+ * @param track - variable that will store the output
+ * @param param - input paramaters
+ * @return true on succes
+ * @return false otherwise
+ */
 bool findTrack(uint32_t *window, seq *seq, int *count, int *position, aTrack *track, parameters param);
-bool initialRepeats(repeats *rep, int mid_now, int from);
+
+
+/**
+ * @brief Initialize repeats to certain values
+ * 
+ * @param rep 
+ * @param mid_now 
+ * @param from  
+ */
+void inicializeRepeats(repeats *rep, int mid_now, int from);
+
+
+/**
+ * @brief Calculate starting point for the A-tracks index
+ * 
+ * @param total_size 
+ * @return starting point
+ */
 uint32_t calculateStartingPoint(int total_size);
+
+/**
+ * @brief Create a mask 
+ * 
+ * @param min_at - mask length
+ * @return mask
+ */
 uint32_t createMask(int min_at);
-bounds satisfiesBoundaries(int x, int upper, int lower);
+
+
+/**
+ * @brief Check if the spacer is inside the boundaries
+ * 
+ * @param x - spacer
+ * @param upper - upper boundary
+ * @param lower - lower boundary
+ * @return bounds (see enum bounds)
+ */
+bounds satisfiesBoundaries(uint32_t x, uint32_t upper, uint32_t lower);
+
+
+/**
+ * @brief Writes result to output file.
+ * 
+ * @param f - input file 
+ * @param result - output file
+ * @param printer - print informations
+ * @param repeats - A-phased repeat information
+ * @return true on succes
+ * @return false otherwise
+ */
 bool writeResult(FILE *f, FILE *result, printer printer, repeats repeats);
-bool getHeader(char * header, char *fname);
+
+
+/**
+ * @brief Set the color of prints to red
+ * 
+ */
 void red();
+
+
+/**
+ * @brief Reset the color of prints to white
+ * 
+ */
 void reset();
 
 
@@ -84,7 +160,7 @@ bool searchAtrack(seq *seq, uint8_t *value, aTrack *track);
  * @brief Get character representation of nucleotide.
  * @param seq - sequence for searching
  */
-bool linearSearch(struct seq *seq, FILE *result, printer printer, FILE *f, aTrack *prev, parameters parametr, repeats *rep, bool *at_overflow, uint32_t mask);
+bool linearSearch(struct seq *seq, FILE *result, printer printer, FILE *f, parameters parametr, repeats *rep, bool *at_overflow, uint32_t mask);
 
 
 /**

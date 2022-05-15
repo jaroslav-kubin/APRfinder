@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+/**
+ * @brief Just enum for switch types
+ * 
+ */
 typedef enum switches {
     input,
     output,
@@ -25,11 +29,16 @@ typedef enum switches {
 
 } switches;
 
+
+/**
+ * @brief Parameters for searching
+ * 
+ */
 typedef struct parameters {
     char* input;
     char* output;
-    int lower;
-    int upper;
+    uint32_t lower;
+    uint32_t upper;
     int min_AT;
     int max_AT;
     int min_tracks;
@@ -37,6 +46,11 @@ typedef struct parameters {
     int memory_size;
 } parameters;
 
+
+/**
+ * @brief Parameters for printing
+ * 
+ */
 
 typedef struct printer {
     char *id;
@@ -52,7 +66,9 @@ typedef struct printer {
 } printer;
 
 
-
+/**
+ * Functions to set up printer and parameters.
+ */
 int setMemorySize(char *arg, parameters *param);
 int setMaxTracks(char *arg, parameters *param);
 int setMinTracks(char *arg, parameters *param);
@@ -71,5 +87,15 @@ void initializePrinter(printer *p);
 int setExactTracks(char *arg, parameters *param);
 int setExactAT(char *arg, parameters *param);
 int setExactBound(char *arg, parameters *param);
+
+/**
+ * @brief Print usage
+ * 
+ */
 void printUsage();
+
+/**
+ * @brief Print help
+ * 
+ */
 void printHelp();

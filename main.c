@@ -3,7 +3,7 @@
 #include <getopt.h>
 #include <errno.h>
 #include <time.h>
-#define fileOpeningFailure "Cant open the file %s.Check if your file after -i/--input <file> exists and can be accessed,\n"
+#define fileOpeningFailure "Cant open the file %s.Check if your file after --input <file> exists and can be accessed,\n"
 
 
 
@@ -138,12 +138,12 @@ int main(int argc, char *argv[]){
 
     initializePrinter(&printer);
     initializeImplicit(&param);
-    if (param.upper > 20) {
+    if (param.upper > 19) {
         fprintf(stderr, "The upper bound for spacer length is little too big, maximum is 19.\n");
         return 1;
     }
 
-    if (param.lower < 0) {
+    if (param.lower < 2) {
         fprintf(stderr, "The lower bound for spacer length is little too small, minimum is 2.\n");
         return 1;
     }

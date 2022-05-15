@@ -5,7 +5,7 @@
 #define paramaterOverflow "The argument of --%s needs to be between %d and %d\n"
 
 
-int setValue(char *arg, int *value, char* option) {
+int setValueS(char *arg, int *value, char* option) {
     if (*value) {
         fprintf(stderr, duplicitOption, option);
         return 0;
@@ -22,12 +22,31 @@ int setValue(char *arg, int *value, char* option) {
     return 1;
 }
 
+
+int setValueU(char *arg, uint32_t *value, char* option) {
+    if (*value) {
+        fprintf(stderr, duplicitOption, option);
+        return 0;
+    }
+    (*value) = strtol(arg, NULL, 10);
+    if (errno) {
+        printf("Cant convert it\n");
+        return 0;
+    }
+    if (!(*value)) {
+        printf("Upper boundary is 0 or blabla\n");
+        return 0;
+    }
+    return 1;
+}
+
+
 bool parameterOutOfBounds(int x, int lower, int upper) {
     return (x >= lower) && (x <= upper);
 }
 
 int setMemorySize(char *arg, parameters *param) {
-    if (!(setValue(arg, &(param->memory_size), "memory-size"))) {
+    if (!(setValueS(arg, &(param->memory_size), "memory-size"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->memory_size, 1000, 10000)) {
@@ -38,7 +57,7 @@ int setMemorySize(char *arg, parameters *param) {
 }
 
 int setMaxTracks(char *arg, parameters *param) {
-    if (!(setValue(arg, &(param->max_tracks), "max-tracks"))) {
+    if (!(setValueS(arg, &(param->max_tracks), "max-tracks"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->max_tracks, 1, 10)) {
@@ -49,7 +68,7 @@ int setMaxTracks(char *arg, parameters *param) {
 }
 
 int setMinTracks(char *arg, parameters *param) {
-    if (!(setValue(arg, &(param->min_tracks), "min-tracks"))) {
+    if (!(setValueS(arg, &(param->min_tracks), "min-tracks"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->min_tracks, 1, 10)) {
@@ -134,7 +153,7 @@ int setExactBound(char *arg, parameters *param) {
 }
 
 int setMaxAT(char *arg, parameters *param) {
-    if (!(setValue(arg, &(param->max_AT), "max-AT"))) {
+    if (!(setValueS(arg, &(param->max_AT), "max-AT"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->max_AT, 2, 12)) {
@@ -145,7 +164,7 @@ int setMaxAT(char *arg, parameters *param) {
 }
 
 int setMinAT(char *arg, parameters *param) {
-    if (!(setValue(arg, &(param->min_AT), "min-AT"))) {
+    if (!(setValueS(arg, &(param->min_AT), "min-AT"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->min_AT, 2, 12)) {
@@ -176,7 +195,7 @@ int setOutput(char *arg, parameters *parameters) {
 
 
 int setLower(char* arg, parameters *param) {
-    if (!(setValue(arg, &(param->lower), "lower-bound"))) {
+    if (!(setValueU(arg, &(param->lower), "lower-bound"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->lower, 2, 20)) {
@@ -188,7 +207,7 @@ int setLower(char* arg, parameters *param) {
 
 
 int setUpper(char* arg, parameters *param) {
-    if (!(setValue(arg, &(param->upper), "upper-bound"))) {
+    if (!(setValueU(arg, &(param->upper), "upper-bound"))) {
         return 0;
     }
     if (!parameterOutOfBounds(param->upper, 2, 20)) {
