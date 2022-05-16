@@ -225,9 +225,6 @@ void printParameters(parameters param) {
     printf("Lower bound : %d\nUpper bound : %d\n", param.lower, param.upper);
     printf("Minimum for considering a-track: %d\n", param.min_AT);
     printf("Maximum for considering a-track: %d\n", param.max_AT);
-    printf("If there is between %d and %d tracks with spacer between them of length %d to %d, I will write this as A-phased-repeat\n", param.min_tracks, 
-                                                                                                                       param.max_tracks,
-                                                                                                                       param.lower, param.upper);
 }
 
 
@@ -245,7 +242,7 @@ void printPrinter(printer printer) {
 }
 
 void printUsage() {
-    printf("aprfinder - tool for a-phased repeat search.\n");
+    printf("aprfinder v1.4.1 - tool for a-phased repeat search.\n");
     printf("Usage:\n");
     printf("aprfinder [--help] [--input=<string>] [--output=<string>] [--upper-bound=<int>] [--lower-bound=<int>]\n");
     printf("          [--max-AT=<int>] [--min-AT=<int>] [--max-tracks=<int>] [--min-tracks=<int>] [--memory-size=<int>]\n");
